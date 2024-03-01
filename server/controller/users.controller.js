@@ -2,6 +2,9 @@ import HttpError from "../models/error.model.js";
 import userModel from "../models/users.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import fs from "fs";
+import path from "path";
+import { v4 as uuidv4 } from 'uuid';
 
 // REGISTER NEW USER
 // POST: api/users/register
@@ -95,8 +98,45 @@ export const getUser = async (req,res,next) => {
 // CHANGE USER AVATAR (profile picture)
 // POST: api/users/change-avatar
 // PROTECTED
-export const changeAvatar = (req,res,next) => {
-    res.status(200).json({message:"Changing avatar!"})
+export const changeAvatar = async (req,res,next) => {
+    try {
+        if(!req.files.avatar){
+            return next(new HttpError("Choose an image.",422));
+        }
+
+        const user = await userModel.findById(req.user.id);
+        if(user.avatar){
+            fs.unlink(path.join(__dirname, "..", "uploads", user.avatar), (err) => {
+                if(err){
+                    return next(new HttpError(err))
+                }
+            })
+        }
+
+        const {avatar} = req.files;
+
+        if(avatar,size > 500000){
+            return next(new HttpError("Profile picture is too big. Should be less then 500kb.",422));
+        }
+
+        let fileName;
+        fileName = avatar.name;
+        let splittedFilename = fileName.plit(".");
+        let newFileName = splittedFilename[0] + uuidv4() + "." + splittedFilename[splittedFilename.length - 1] ;
+        avatar.mv(path.join(__dirname,"..","uploads",newFileName), async (err) => {
+            if(err){
+                return next(new HttpError(err))
+            }
+
+            const updatedAvatar = await userModel.findByIdAndUpdate(req.user.id, {avatar:newFileName}, {new:true});
+            if(!updatedAvatar){
+                return next(new HttpError("Avatar could not changed!",422))
+            }
+            res.status(200).json(updatedAvatar);
+        })
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
 
 // EDIT USER DETAILS (from profile)
@@ -109,8 +149,13 @@ export const editUser = (req,res,next) => {
 // GET AUTHORS
 // POST: api/users/authors
 // UNPROTECTED
-export const getAuthors = (req,res,next) => {
-    res.status(200).json({message:"All authors get!"})
+export const getAuthors = async (req,res,next) => {
+    try {
+        const authors = await userModel.find().select("-password");
+        res.status(200).json(authors);
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
     
           
