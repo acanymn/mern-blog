@@ -149,7 +149,7 @@ export const editUser = async (req,res,next) => {
     try {
         const {name,email,currentPassword,newPassword,confirmNewPassword} = req.body;
         if(!email || !name || !currentPassword || !newPassword || !confirmNewPassword){
-            return next(new HttpError("Fill al fields!",422))
+            return next(new HttpError("Fill all fields!",422))
         }
 
         const user = await userModel.findById(req.user.id);
@@ -157,7 +157,29 @@ export const editUser = async (req,res,next) => {
             return next(new HttpError("User not found!",403));
         }
 
-        //contiunes from here vid: 04:18:33
+        const existEmail = await userModel.findOne({email});
+        if(existEmail && existEmail._id != req.user.id){
+            return next(new HttpError("This email already exist!",422))
+        }
+
+        const validateUserPassword = await bcrypt.compare(currentPassword,user.password);
+        if(!validateUserPassword){
+            return next(new HttpError("Invalid current Password!",422))
+        }
+
+        if(newPassword !== confirmNewPassword){
+            return next(new HttpError("New Passwords are not matching!",422))
+        }
+
+        if(newPassword.length < 6 && confirmNewPassword.length < 6){
+            return next(new HttpError("New Password must be at least 6 characters!"))
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        const newInfo = await userModel.findByIdAndUpdate(req.user.id, {name,email,password:hashedPassword}, {new:true});
+        res.status(200).json(newInfo);
 
     } catch (error) {
         return next(new HttpError(error))
