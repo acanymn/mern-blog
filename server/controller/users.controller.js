@@ -76,8 +76,20 @@ export const loginUser = async (req,res,next) => {
 // USER PROFILE
 // GET: api/users/:id
 // PROTECTED
-export const getUser = (req,res,next) => {
-      
+export const getUser = async (req,res,next) => {
+    try {
+
+        const {id} = req.params;
+        const user = await userModel.findById(id).select("-password");
+
+        if(!user){
+            return next(new HttpError("User cannot found!", 422));
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
     
 // CHANGE USER AVATAR (profile picture)
