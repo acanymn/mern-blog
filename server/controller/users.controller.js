@@ -77,7 +77,7 @@ export const loginUser = async (req,res,next) => {
 // GET: api/users/:id
 // PROTECTED
 export const getUser = (req,res,next) => {
-    res.status(200).json({message:"Get user profile!"})
+    
 };
     
 // CHANGE USER AVATAR (profile picture)
