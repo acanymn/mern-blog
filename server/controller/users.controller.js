@@ -3,8 +3,11 @@ import userModel from "../models/users.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import fs from "fs";
-import path from "path";
+import path, { dirname, join } from "path";
+import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // REGISTER NEW USER
 // POST: api/users/register
@@ -115,13 +118,13 @@ export const changeAvatar = async (req,res,next) => {
 
         const {avatar} = req.files;
 
-        if(avatar,size > 500000){
+        if(avatar.size > 500000){
             return next(new HttpError("Profile picture is too big. Should be less then 500kb.",422));
         }
 
         let fileName;
         fileName = avatar.name;
-        let splittedFilename = fileName.plit(".");
+        let splittedFilename = fileName.split(".");
         let newFileName = splittedFilename[0] + uuidv4() + "." + splittedFilename[splittedFilename.length - 1] ;
         avatar.mv(path.join(__dirname,"..","uploads",newFileName), async (err) => {
             if(err){
