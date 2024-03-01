@@ -145,8 +145,23 @@ export const changeAvatar = async (req,res,next) => {
 // EDIT USER DETAILS (from profile)
 // POST: api/users/edit-user
 // PROTECTED
-export const editUser = (req,res,next) => {
-    res.status(200).json({message:"Edit user details!"})
+export const editUser = async (req,res,next) => {
+    try {
+        const {name,email,currentPassword,newPassword,confirmNewPassword} = req.body;
+        if(!email || !name || !currentPassword || !newPassword || !confirmNewPassword){
+            return next(new HttpError("Fill al fields!",422))
+        }
+
+        const user = await userModel.findById(req.user.id);
+        if(!user){
+            return next(new HttpError("User not found!",403));
+        }
+
+        //contiunes from here vid: 04:18:33
+
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
 
 // GET AUTHORS
