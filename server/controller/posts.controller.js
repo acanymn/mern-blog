@@ -1,10 +1,26 @@
 //Pp
 
+import postModel from "../models/posts.model.js"
+import userModel from "../models/users.model.js"
+import fs from "fs";
+import path, { dirname, join } from "path";
+import { fileURLToPath } from 'url';
+import { v4 as uuidv4 } from 'uuid';
+import HttpError from "../models/error.model.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 //====== CREATE A POST
 //POST: api/posts
 //Protected
 export const createPost = (req,res,next) => {
-    res.json("create Post")
+    try {
+
+        //contiune creating Post. Youtube cont from: 04:48:41
+
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
 
 
