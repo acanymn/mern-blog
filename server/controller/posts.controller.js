@@ -108,8 +108,20 @@ export const getCatPost = async (req,res,next) => {
 //====== GET POSTS BY AUTHORS
 //GET: api/posts/users/:id
 //UNProtected
-export const getUsersPost = (req,res,next) => {
-    res.json("get Post by authors")
+export const getUsersPost = async (req,res,next) => {
+    try {
+        
+        const {id} = req.params;
+        const posts = await postModel.find({creator:id}).sort({updatedAt: -1});
+        if(!posts){
+            return next(new HttpError("Post not found!",404));
+        }
+
+        res.status(200).json(posts);
+
+    } catch (error) {
+        return next(new HttpError(error));
+    }
 };
 
 
