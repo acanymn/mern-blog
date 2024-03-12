@@ -91,8 +91,17 @@ export const getPost = async (req,res,next) => {
 //====== GET POSTS BY CATEGORY
 //GET: api/posts/categories/:category
 //unProtected
-export const getCatPost = (req,res,next) => {
-    res.json("get osts by category")
+export const getCatPost = async (req,res,next) => {
+    try {
+        const {category} = req.params;
+        const posts = await postModel.find({category}).sort({updatedAt: -1});
+        if(!posts){
+            return next(new HttpError("Post not found!",404))
+        } 
+        res.status(200).json(posts);
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
 
 
