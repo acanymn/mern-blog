@@ -74,8 +74,17 @@ export const getPosts = async (req,res,next) => {
 //====== GET SINGLE POST
 //GET: api/posts/:id
 //unProtected
-export const getPost = (req,res,next) => {
-    res.json("get single Post")
+export const getPost = async (req,res,next) => {
+    try {
+        const postId = req.params.id;
+        const post = await postModel.findById(postId);
+        if(!post){
+            return next(new HttpError("Post not found!",404))
+        }
+        res.status(200).json(post);
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
 
 
