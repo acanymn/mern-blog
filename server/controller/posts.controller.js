@@ -63,7 +63,7 @@ export const createPost = (req,res,next) => {
 //UNProtected
 export const getPosts = async (req,res,next) => {
     try {
-        const posts = await postModel.find().sort({updateAt: -1})
+        const posts = await postModel.find().sort({updatedAt: -1})
         res.status(200).json(posts)
     } catch (error) {
         return next(new HttpError(error));
