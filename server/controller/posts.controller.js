@@ -15,8 +15,42 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 //Protected
 export const createPost = (req,res,next) => {
     try {
+        
+        let {title, category, description} = req.body;
+        if(!title || !category || !description || !req.files){
+            
+            return next(new HttpError("Fill all fileds and choose a thumbnail!"))
+        } 
+        
+        let {thumbnail} = req.files;
 
-        //contiune creating Post. Youtube cont from: 04:48:41
+        if(thumbnail.size > 2000000){
+            return next(new HttpError("Thumbnail too big. Must be less then 2mb."))
+        }
+
+        let fileName = thumbnail.name;
+        let splittedFilename = fileName.split(".");
+        let newFileName = splittedFilename[0] + uuidv4() + "." + splittedFilename[splittedFilename.length - 1];
+        thumbnail.mv(path.join(__dirname, "..", "/uploads", newFileName), async (err) => {
+            
+            if(err){
+                return next(new HttpError(err));
+            } else {
+                const newPost = await postModel.create({title,category, description, thumbnail: newFileName, creator: req.user.id});
+            
+                if(!newPost){
+                    
+                    return next(new HttpError("Post could not be created!", 422));
+                }
+  
+                const currentUser = await userModel.findById(req.user.id);
+                const userPostCount = currentUser.posts + 1;
+                await userModel.findByIdAndUpdate(req.user.id, {posts: userPostCount});
+
+                res.status(201).json(newPost);
+            }
+
+        })
 
     } catch (error) {
         return next(new HttpError(error))
@@ -27,8 +61,13 @@ export const createPost = (req,res,next) => {
 //====== GET ALL POST
 //GET: api/posts
 //UNProtected
-export const getPosts = (req,res,next) => {
-    res.json("Get ALL Post")
+export const getPosts = async (req,res,next) => {
+    try {
+        const posts = await postModel.find().sort({updateAt: -1})
+        res.status(200).json(posts)
+    } catch (error) {
+        return next(new HttpError(error));
+    }
 };
 
 
