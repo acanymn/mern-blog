@@ -128,8 +128,55 @@ export const getUsersPost = async (req,res,next) => {
 //====== EDIT POSTS
 //PATCH: api/posts/:id
 //Protected
-export const editPost = (req,res,next) => {
-    res.json("edit Post")
+export const editPost = async (req,res,next) => {
+    try {
+        let fileName;
+        let newFileName;
+        let updatedPost;
+        const postId = req.params.id;
+        let {title,category,description} = req.body;
+
+        if(!title || !category || description.length < 12) {
+            return next(new HttpError("Fill all the fields.",422));
+        }
+
+        if(!req.files){
+            updatedPost = await postModel.findByIdAndUpdate(postId, {title,category,description}, {new:true});
+        } else{
+            const oldPost = await postModel.findById(postId);
+            fs.unlink(path.join(__dirname, "..", "uploads", oldPost.thumbnail), async (err) => {
+                if(err){
+                    return next(new HttpError(err))
+                }
+            });
+        }
+
+        const {thumbnail} = req.files;
+
+        if(thumbnail.size > 2000000){
+            return next(new HttpError("Thumbnail is too big. Should be less than 2mb."))
+        }
+
+        fileName = thumbnail.name;
+        let splittedFilename = fileName.split(".");
+        newFileName = splittedFilename[0] + uuidv4()+ "." + splittedFilename[splittedFilename.length - 1];
+        thumbnail.mv(path.join(__dirname, "..", "uploads", newFileName), async (err) => {
+            if(err){
+                return next(new HttpError(err))
+            }
+        })
+
+        updatedPost = await postModel.findByIdAndUpdate(postId, {title,category,description,thumbnail: newFileName}, {new:true});
+
+        if(!updatedPost){
+            return next(new HttpError("Error! Post cannot updated!", 422));
+        }
+
+        res.status(200).json(updatedPost);
+
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
 
 
