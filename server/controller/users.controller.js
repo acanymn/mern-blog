@@ -67,7 +67,7 @@ export const loginUser = async (req,res,next) => {
 
         const comparepass = await bcrypt.compare(password,user.password);
         //BE CAREFUL!
-        const IsAdmin = password === "admin" ? true : false;
+        const IsAdmin = password === process.env.ADMIN_PASSWORD ? true : false;
         if(!IsAdmin){
             if(!comparepass){
                 return next(new HttpError("Invalid password",422));
