@@ -27,7 +27,7 @@ app.use("/api/posts",postsRoute);
 app.use(notFound);
 app.use(errorHandler);
 
-mongoose.connect(process.env.MONGO_URL).then(app.listen(process.env.PORT, () => {
+mongoose.connect(process.env.MONGO_URL).then(app.listen(process.env.PORT || 2874, () => {
     console.log(`Server running on ${process.env.PORT}`);
 })).catch(error => {console.log(error)})
 
