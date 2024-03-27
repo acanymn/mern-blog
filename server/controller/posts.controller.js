@@ -140,43 +140,45 @@ export const editPost = async (req,res,next) => {
             return next(new HttpError("Fill all the fields.",422));
         }
 
-        if(req.user.id == oldPost.creator){
-            if(!req.files){
-                updatedPost = await postModel.findByIdAndUpdate(postId, {title,category,description}, {new:true});
-            } else{
-                const oldPost = await postModel.findById(postId);
-                fs.unlink(path.join(__dirname, "..", "uploads", oldPost.thumbnail), async (err) => {
-                    if(err){
-                        return next(new HttpError(err))
-                    }
-                });
-            }
-    
+        if(!req.files){
+            updatedPost = await postModel.findByIdAndUpdate(postId, {title,category,description}, 
+                {new:true});
+        }else{
+            const oldPost = await postModel.findById(postId);
+
+            fs.unlink(path.join(__dirname, "..", "uploads", oldPost.thumbnail), async (err) => {
+                
+                if(err){
+                    return next(new HttpError(err))
+                }
+            
+            });
+
             const {thumbnail} = req.files;
     
             if(thumbnail.size > 2000000){
                 return next(new HttpError("Thumbnail is too big. Should be less than 2mb."))
-            }
-    
-            fileName = thumbnail.name;
+             }
+             fileName = thumbnail.name;
             let splittedFilename = fileName.split(".");
             newFileName = splittedFilename[0] + uuidv4()+ "." + splittedFilename[splittedFilename.length - 1];
             thumbnail.mv(path.join(__dirname, "..", "uploads", newFileName), async (err) => {
-                if(err){
-                    return next(new HttpError(err))
-                }
-            })
-    
-            updatedPost = await postModel.findByIdAndUpdate(postId, {title,category,description,thumbnail: newFileName}, {new:true});
-    
-            if(!updatedPost){
-                return next(new HttpError("Error! Post cannot updated!", 422));
+            if(err){
+                return next(new HttpError(err))
             }
-    
-            res.status(200).json(updatedPost);
-        } else{
-            return next(new HttpError("Cannot update this post!",400));
+        })
+
+        updatedPost = await postModel.findByIdAndUpdate(postId, {title,category,description, thumbnail: newFileName}, 
+            {new:true});
+
         }
+        
+    
+        if(!updatedPost){
+            return next(new HttpError("Error! Post cannot updated!", 422));
+        }
+
+        res.status(200).json(updatedPost)
 
     } catch (error) {
         return next(new HttpError(error))
